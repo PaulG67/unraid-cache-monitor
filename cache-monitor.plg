@@ -2,7 +2,7 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name      "cache-monitor">
 <!ENTITY author    "PaulG67">
-<!ENTITY version   "2026.11.13.1">
+<!ENTITY version   "2026.11.13.2">
 <!ENTITY launch    "Settings/CacheMonitor">
 <!ENTITY pluginURL "https://raw.githubusercontent.com/PaulG67/unraid-cache-monitor/main/cache-monitor.plg">
 <!ENTITY gitURL    "https://raw.githubusercontent.com/PaulG67/unraid-cache-monitor/main/src/usr/local/emhttp/plugins/cache-monitor">
@@ -12,7 +12,8 @@
 
 <CHANGES>
 ### &version;
-- Installation wird nicht mehr abgebrochen
+- Seite unter Einstellungen, Benutzer-Utilities
+- Seiteninhalt wird ausgeführt statt als PHP-Text angezeigt
 
 ### 2026.11.13
 - Belegung, frei und Prozent je Cache-Pool
@@ -24,6 +25,13 @@
 <FILE Run="/bin/bash">
 <INLINE>
 <![CDATA[
+rm -f /usr/local/emhttp/plugins/cache-monitor/CacheMonitor.page \
+  /usr/local/emhttp/plugins/cache-monitor/VERSION \
+  /usr/local/emhttp/plugins/cache-monitor/include/common.php \
+  /usr/local/emhttp/plugins/cache-monitor/include/view.php \
+  /usr/local/emhttp/plugins/cache-monitor/include/page.php \
+  /usr/local/emhttp/plugins/cache-monitor/scripts/collect.php \
+  /usr/local/emhttp/plugins/cache-monitor/scripts/install.sh
 mkdir -p /usr/local/emhttp/plugins/cache-monitor/include
 mkdir -p /usr/local/emhttp/plugins/cache-monitor/scripts
 mkdir -p /boot/config/plugins/cache-monitor

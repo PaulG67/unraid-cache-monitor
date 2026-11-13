@@ -56,7 +56,7 @@ function cm_render($cfg, $notice, $error) {
         echo '<p class="cm-note">Eine Messung läuft. Ordner und große Dateien erscheinen, sobald sie fertig ist.</p>';
     }
     if (!$selected) {
-        echo '<p>Noch keine Messung. Beim Installieren startet sie im Hintergrund. Wenn hier nach einigen Minuten nichts steht, „Jetzt messen“ wählen.</p>';
+        echo '<p>Noch keine Messung. „Jetzt messen“ wählen. Die stündliche Messung läuft zusätzlich von selbst.</p>';
         if ($names) {
             echo '<p class="cm-muted">Gefundene Pools: ' . cm_h(implode(', ', $names)) . '</p>';
         } else {

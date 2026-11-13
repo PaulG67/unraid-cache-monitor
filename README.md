@@ -4,7 +4,7 @@ Plugin für die Cache-Pools. Es zeigt, wie voll der Cache ist, welche Ordner und
 
 Zusätzlich: Btrfs-Daten und Metadaten, RAID-Profil, Geräte und Temperatur, Inodes, Scrub, Cache-Floor, Shares mit Cache-Modus, Docker-Image und VM-Abbilder, Verlauf über 30 Tage, Unraid-Benachrichtigung.
 
-Die Seite liegt unter **Einstellungen → Other → Cache Monitor**. Dieselbe Seite öffnet auch die Plugin-Liste.
+Die Seite liegt unter **Einstellungen → Benutzer-Utilities (User Utilities) → Cache Monitor**. Dieselbe Seite öffnet auch die Plugin-Liste.
 
 ## Installieren
 
@@ -14,7 +14,7 @@ In Unraid: **Plugins → Install Plugin**, diese Adresse einfügen und **Install
 https://raw.githubusercontent.com/PaulG67/unraid-cache-monitor/main/cache-monitor.plg
 ```
 
-Danach **Einstellungen → Other → Cache Monitor** öffnen und **Jetzt messen** wählen. Ordner auf einem großen Cache können einige Minuten brauchen. Danach die Seite neu laden. Die stündliche Messung läuft zusätzlich von selbst.
+Danach **Einstellungen → Benutzer-Utilities (User Utilities) → Cache Monitor** öffnen und **Jetzt messen** wählen. Ordner auf einem großen Cache können einige Minuten brauchen. Danach die Seite neu laden. Die stündliche Messung läuft zusätzlich von selbst.
 
 Es ist kein Docker-Container und kein User Script nötig. Schwellen und der Verlauf liegen auf dem Flash unter `/boot/config/plugins/cache-monitor/` und bleiben bei einem Neustart erhalten.
 
@@ -22,7 +22,7 @@ Es ist kein Docker-Container und kein User Script nötig. Schwellen und der Verl
 
 **Plugins → Check for Updates**, dann das angebotene Update installieren. Einstellungen und Verlauf bleiben.
 
-Wenn Unraid kein Update anzeigt, die Seite mit Strg+F5 neu laden. Die Version steht unten auf der Cache-Monitor-Seite und im Plugin als `2026.11.13.1`.
+Wenn Unraid kein Update anzeigt, die Seite mit Strg+F5 neu laden. Die Version steht unten auf der Cache-Monitor-Seite und im Plugin als `2026.11.13.2`.
 
 ## Was die Messung macht
 
