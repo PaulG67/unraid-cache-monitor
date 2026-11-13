@@ -1,0 +1,67 @@
+<?xml version='1.0' encoding='utf-8' standalone='yes'?>
+<!DOCTYPE PLUGIN [
+<!ENTITY name      "cache-monitor">
+<!ENTITY author    "PaulG67">
+<!ENTITY version   "2026.11.13">
+<!ENTITY launch    "Settings/CacheMonitor">
+<!ENTITY pluginURL "https://raw.githubusercontent.com/PaulG67/unraid-cache-monitor/main/cache-monitor.plg">
+<!ENTITY gitURL    "https://raw.githubusercontent.com/PaulG67/unraid-cache-monitor/main/src/usr/local/emhttp/plugins/&name;">
+<!ENTITY support   "https://github.com/PaulG67/unraid-cache-monitor">
+]>
+<PLUGIN name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;" support="&support;" icon="fa-hdd-o" min="6.11.0">
+
+<CHANGES>
+<![CDATA[
+### 2026.11.13
+- Belegung, frei und Prozent je Cache-Pool
+- Ordner und Unterordner, große Dateien, Shares, Docker-Image und VM-Abbilder
+- Zuwachs über 24 Stunden und 7 Tage, Verlauf über 30 Tage
+- Warnung wenn der Pool, die Btrfs-Metadaten oder die Prognose volllaufen
+]]>
+</CHANGES>
+
+<FILE Name="/usr/local/emhttp/plugins/&name;/VERSION" Mode="0644">
+<URL>&gitURL;/VERSION</URL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/&name;/CacheMonitor.page" Mode="0644">
+<URL>&gitURL;/CacheMonitor.page</URL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/&name;/include/common.php" Mode="0644">
+<URL>&gitURL;/include/common.php</URL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/&name;/include/view.php" Mode="0644">
+<URL>&gitURL;/include/view.php</URL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/&name;/include/page.php" Mode="0644">
+<URL>&gitURL;/include/page.php</URL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/&name;/scripts/collect.php" Mode="0755">
+<URL>&gitURL;/scripts/collect.php</URL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/&name;/scripts/install.sh" Mode="0755">
+<URL>&gitURL;/scripts/install.sh</URL>
+</FILE>
+
+<FILE Name="/etc/cron.d/&name;" Mode="0644">
+<INLINE>
+<![CDATA[
+15 * * * * root php -f /usr/local/emhttp/plugins/cache-monitor/scripts/collect.php >/dev/null 2>&1
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/tmp/&name;-installed" Run="bash /usr/local/emhttp/plugins/&name;/scripts/install.sh" Mode="0644">
+<INLINE>
+<![CDATA[
+ok
+]]>
+</INLINE>
+</FILE>
+
+</PLUGIN>
