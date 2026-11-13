@@ -1,24 +1,37 @@
-<?xml version='1.0' encoding='utf-8' standalone='yes'?>
+<?xml version='1.0' standalone='yes'?>
 <!DOCTYPE PLUGIN [
 <!ENTITY name      "cache-monitor">
 <!ENTITY author    "PaulG67">
-<!ENTITY version   "2026.11.13">
+<!ENTITY version   "2026.11.13.1">
 <!ENTITY launch    "Settings/CacheMonitor">
 <!ENTITY pluginURL "https://raw.githubusercontent.com/PaulG67/unraid-cache-monitor/main/cache-monitor.plg">
-<!ENTITY gitURL    "https://raw.githubusercontent.com/PaulG67/unraid-cache-monitor/main/src/usr/local/emhttp/plugins/&name;">
+<!ENTITY gitURL    "https://raw.githubusercontent.com/PaulG67/unraid-cache-monitor/main/src/usr/local/emhttp/plugins/cache-monitor">
 <!ENTITY support   "https://github.com/PaulG67/unraid-cache-monitor">
 ]>
-<PLUGIN name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;" support="&support;" icon="fa-hdd-o" min="6.11.0">
+<PLUGIN name="&name;" author="&author;" version="&version;" launch="&launch;" pluginURL="&pluginURL;" support="&support;" icon="hdd-o" min="6.9.0">
 
 <CHANGES>
-<![CDATA[
+### &version;
+- Installation wird nicht mehr abgebrochen
+
 ### 2026.11.13
 - Belegung, frei und Prozent je Cache-Pool
 - Ordner und Unterordner, große Dateien, Shares, Docker-Image und VM-Abbilder
 - Zuwachs über 24 Stunden und 7 Tage, Verlauf über 30 Tage
 - Warnung wenn der Pool, die Btrfs-Metadaten oder die Prognose volllaufen
-]]>
 </CHANGES>
+
+<FILE Run="/bin/bash">
+<INLINE>
+<![CDATA[
+mkdir -p /usr/local/emhttp/plugins/cache-monitor/include
+mkdir -p /usr/local/emhttp/plugins/cache-monitor/scripts
+mkdir -p /boot/config/plugins/cache-monitor
+mkdir -p /var/local/cache-monitor
+exit 0
+]]>
+</INLINE>
+</FILE>
 
 <FILE Name="/usr/local/emhttp/plugins/&name;/VERSION" Mode="0644">
 <URL>&gitURL;/VERSION</URL>
@@ -44,22 +57,29 @@
 <URL>&gitURL;/scripts/collect.php</URL>
 </FILE>
 
-<FILE Name="/usr/local/emhttp/plugins/&name;/scripts/install.sh" Mode="0755">
-<URL>&gitURL;/scripts/install.sh</URL>
-</FILE>
-
-<FILE Name="/etc/cron.d/&name;" Mode="0644">
+<FILE Run="/bin/bash">
 <INLINE>
 <![CDATA[
-15 * * * * root php -f /usr/local/emhttp/plugins/cache-monitor/scripts/collect.php >/dev/null 2>&1
-]]>
-</INLINE>
-</FILE>
-
-<FILE Name="/tmp/&name;-installed" Run="bash /usr/local/emhttp/plugins/&name;/scripts/install.sh" Mode="0644">
-<INLINE>
-<![CDATA[
-ok
+CFG=/boot/config/plugins/cache-monitor/cache-monitor.cfg
+if [ ! -f "$CFG" ]; then
+  printf '%s\n' \
+    'WARN_PERCENT="80"' \
+    'CRIT_PERCENT="90"' \
+    'META_PERCENT="85"' \
+    'FORECAST_DAYS="14"' \
+    'SCAN_HOURS="6"' \
+    'DEPTH="2"' \
+    'NOTIFY="yes"' \
+    'POOL=""' > "$CFG"
+fi
+printf '%s\n' '15 * * * * root /usr/bin/php -f /usr/local/emhttp/plugins/cache-monitor/scripts/collect.php >/dev/null 2>&1' > /etc/cron.d/cache-monitor
+chmod 644 /etc/cron.d/cache-monitor 2>/dev/null
+chmod 755 /usr/local/emhttp/plugins/cache-monitor/scripts/collect.php 2>/dev/null
+if [ -f /var/run/crond.pid ]; then
+  kill -HUP "$(cat /var/run/crond.pid)" 2>/dev/null
+fi
+echo "cache-monitor installiert"
+exit 0
 ]]>
 </INLINE>
 </FILE>
