@@ -35,6 +35,7 @@ function cm_render($cfg, $notice, $error) {
     $running = cm_pid_running();
     $generated = (is_array($latest) && !empty($latest['generated'])) ? (int) $latest['generated'] : 0;
     echo '<style>' . cm_css() . '</style>';
+    echo '<script>(function(){if(window.cmHelpReady)return;window.cmHelpReady=1;function place(b){var pop=b.parentNode.querySelector(".cm-help-pop");if(!pop)return;var r=b.getBoundingClientRect();var left=Math.max(8,Math.min(r.left,window.innerWidth-256));var top=r.bottom+6;if(top+110>window.innerHeight)top=Math.max(8,r.top-110);pop.style.left=left+"px";pop.style.top=top+"px";}document.addEventListener("mouseover",function(e){var b=e.target.closest?e.target.closest(".cm-help-btn"):null;if(b)place(b);});document.addEventListener("focusin",function(e){var b=e.target.closest?e.target.closest(".cm-help-btn"):null;if(b)place(b);});document.addEventListener("click",function(e){var b=e.target.closest?e.target.closest(".cm-help-btn"):null;var open=document.querySelectorAll(".cm-help.cm-open");for(var i=0;i<open.length;i++){if(!b||open[i]!==b.parentNode)open[i].classList.remove("cm-open");}if(b){e.preventDefault();place(b);b.parentNode.classList.toggle("cm-open");}});})();</script>';
     echo '<div class="cm">';
     echo '<div class="cm-head"><div><h2>Cache Monitor</h2>';
     echo '<p class="cm-muted">Belegung, größte Ordner, Zuwachs und ob der Cache vollläuft. Version ' . cm_h(cm_version()) . '</p></div>';
@@ -106,7 +107,7 @@ function cm_render_pool($pool, $cfg, $snapshots, $generated) {
     $title = array('ok' => 'Im Rahmen', 'warn' => 'Wird knapp', 'crit' => 'Läuft voll');
     echo '<section class="cm-banner cm-' . cm_h($assess['level']) . '">';
     echo '<div class="cm-banner-top"><strong>' . cm_h($title[$assess['level']]) . '</strong>';
-    echo '<span>' . cm_h(cm_pct_text($assess['percent'])) . ' belegt</span></div>';
+    echo '<span>' . cm_h(cm_pct_text($assess['percent'])) . ' belegt' . cm_help('Anteil des Platzes, den das Dateisystem zum Schreiben anbietet. Gezählt wird df, nicht die Summe der Ordner.') . '</span></div>';
     echo cm_bar($assess['percent'], cm_usage_level($assess['percent'], $cfg));
     echo '<p>';
     if ($pool['used'] !== null && $pool['size'] !== null) {
@@ -119,13 +120,13 @@ function cm_render_pool($pool, $cfg, $snapshots, $generated) {
     }
     echo '</p><p>';
     if ($dayDelta !== null) {
-        echo 'Zuwachs 24 Stunden: ' . cm_delta($dayDelta) . '. ';
+        echo 'Zuwachs 24 Stunden' . cm_help('Änderung des belegten Platzes gegenüber der Messung von vor etwa 24 Stunden.') . ': ' . cm_delta($dayDelta) . '. ';
     }
     if ($weekDelta !== null) {
-        echo 'Zuwachs 7 Tage: ' . cm_delta($weekDelta) . '. ';
+        echo 'Zuwachs 7 Tage' . cm_help('Änderung gegenüber der Messung von vor etwa 7 Tagen.') . ': ' . cm_delta($weekDelta) . '. ';
     }
     if ($forecast !== null) {
-        echo 'Bei gleichem Zuwachs voll in etwa ' . cm_h(cm_day_phrase($forecast)) . '.';
+        echo 'Bei gleichem Zuwachs voll in etwa ' . cm_h(cm_day_phrase($forecast)) . cm_help('Hochrechnung aus dem Zuwachs der letzten Tage. Nimmt der belegte Platz ab, gibt es keine Prognose.') . '.';
     } elseif ($thenWeek && $weekDelta !== null && $weekDelta <= 0) {
         echo 'Der belegte Platz nimmt nicht zu.';
     } else {
@@ -144,16 +145,16 @@ function cm_render_pool($pool, $cfg, $snapshots, $generated) {
     $dirsTs = !empty($pool['dirs_ts']) ? (int) $pool['dirs_ts'] : 0;
     cm_fact('Ordner gemessen', $dirsTs ? date('d.m.Y H:i', $dirsTs) : 'noch nicht');
     if ($pool['free_min'] !== null && $pool['free'] !== null && ($pool['free'] - $pool['free_min']) > (5 * 1024 * 1024 * 1024)) {
-        cm_fact('Frei mindestens', cm_bytes($pool['free_min']) . ' (RAID unausgeglichen)');
+        cm_fact('Frei mindestens', cm_bytes($pool['free_min']) . ' (RAID unausgeglichen)', 'Kleinster freier Bereich auf den einzelnen Platten. Bei ungleicher Füllung kann weniger geschrieben werden, als frei angezeigt wird.');
     }
     if (!empty($pool['floor'])) {
-        cm_fact('Cache-Floor', cm_bytes($pool['floor']));
+        cm_fact('Cache-Floor', cm_bytes($pool['floor']), 'Reserve auf dem Cache. Liegt der freie Platz darunter, verschiebt der Mover Shares auf das Array.');
     }
     if (!empty($pool['scrub'])) {
-        cm_fact('Scrub', $pool['scrub']);
+        cm_fact('Scrub', $pool['scrub'], 'Letzter Btrfs-Prüflauf. Er sucht unbemerkte Lesefehler.');
     }
     if ($pool['inode_percent'] !== null) {
-        cm_fact('Inodes', cm_pct_text($pool['inode_percent']));
+        cm_fact('Inodes', cm_pct_text($pool['inode_percent']), 'Belegte Dateieinträge. Ist dieser Bereich voll, lassen sich keine neuen Dateien anlegen, auch wenn noch Speicher frei ist.');
     }
     echo '</div>';
 
@@ -168,7 +169,7 @@ function cm_render_pool($pool, $cfg, $snapshots, $generated) {
     }
 
     if ($pool['data_size'] || $pool['meta_size']) {
-        echo '<h3>Btrfs-Chunks</h3>';
+        echo '<h3>Btrfs-Chunks' . cm_help('Daten, Metadaten und System sind getrennte Bereiche. Die Metadaten können voll sein, obwohl oben noch freier Platz steht.') . '</h3>';
         cm_chunk('Daten', $pool['data_used'], $pool['data_size'], $cfg);
         cm_chunk('Metadaten', $pool['meta_used'], $pool['meta_size'], $cfg);
         cm_chunk('System', $pool['system_used'], $pool['system_size'], $cfg);
@@ -185,11 +186,11 @@ function cm_render_pool($pool, $cfg, $snapshots, $generated) {
             }
         }
     }
-    echo '<h3>Was Platz braucht</h3>';
+    echo '<h3>Was Platz braucht' . cm_help('Ordnergrößen kommen von du und zählen belegte Blöcke. Bei Kompression, Snapshots oder RAID kann die Summe vom Füllstand oben abweichen.') . '</h3>';
     if (!$currentDirs) {
         echo '<p class="cm-muted">Noch keine Ordnermessung. Sie läuft beim ersten Start und danach alle ' . cm_h($cfg['SCAN_HOURS']) . ' Stunden, oder über „Jetzt messen“.</p>';
     } else {
-        echo '<table class="cm-table"><thead><tr><th>Ordner</th><th class="cm-num">Größe</th><th class="cm-num">Anteil</th><th class="cm-num">24 Stunden</th><th class="cm-num">7 Tage</th></tr></thead><tbody>';
+        echo '<table class="cm-table"><thead><tr><th>Ordner</th><th class="cm-num">Größe</th><th class="cm-num">Anteil' . cm_help('Anteil dieses Ordners am belegten Platz des Pools.') . '</th><th class="cm-num">24 Stunden</th><th class="cm-num">7 Tage</th></tr></thead><tbody>';
         $tops = array();
         foreach ($currentDirs as $path => $bytes) {
             if (strpos($path, '/') === false) {
@@ -223,7 +224,7 @@ function cm_render_pool($pool, $cfg, $snapshots, $generated) {
     }
 
     if (!empty($pool['files'])) {
-        echo '<h3>Große Dateien ab 512 MB</h3><table class="cm-table"><thead><tr><th>Datei</th><th class="cm-num">Belegt</th></tr></thead><tbody>';
+        echo '<h3>Große Dateien ab 512 MB' . cm_help('Gezählt wird der belegte Platz auf dem Datenträger, nicht die scheinbare Dateigröße.') . '</h3><table class="cm-table"><thead><tr><th>Datei</th><th class="cm-num">Belegt</th></tr></thead><tbody>';
         foreach ($pool['files'] as $file) {
             echo '<tr><td>' . cm_h($file['path']) . '</td><td class="cm-num">' . cm_h(cm_bytes($file['bytes'])) . '</td></tr>';
         }
@@ -231,7 +232,7 @@ function cm_render_pool($pool, $cfg, $snapshots, $generated) {
     }
 
     if (!empty($pool['shares'])) {
-        echo '<h3>Shares auf diesem Pool</h3><table class="cm-table"><thead><tr><th>Share</th><th>Cache-Modus</th><th class="cm-num">Auf dem Pool</th></tr></thead><tbody>';
+        echo '<h3>Shares auf diesem Pool</h3><table class="cm-table"><thead><tr><th>Share</th><th>Cache-Modus' . cm_help('Nur Cache bleibt auf dem Pool. Cache bevorzugen schreibt zuerst hierher. Cache, dann Array wird später auf das Array verschoben.') . '</th><th class="cm-num">Auf dem Pool</th></tr></thead><tbody>';
         foreach ($pool['shares'] as $share) {
             echo '<tr><td>' . cm_h($share['name']) . '</td><td>' . cm_h(cm_mode_label($share['mode'])) . '</td><td class="cm-num">';
             echo $share['bytes'] === null ? '–' : cm_h(cm_bytes($share['bytes']));
@@ -256,7 +257,7 @@ function cm_render_pool($pool, $cfg, $snapshots, $generated) {
             foreach ($docker['usage'] as $row) {
                 echo '<tr><td>' . cm_h($row['type']) . '</td><td>' . cm_h($row['size']);
                 if (!empty($row['reclaim'])) {
-                    echo ' <span class="cm-muted">freigebbar ' . cm_h($row['reclaim']) . '</span>';
+                    echo ' <span class="cm-muted">freigebbar ' . cm_h($row['reclaim']) . cm_help('Platz, den Docker als unbenutzt meldet. Aufräumen im Docker kann ihn zurückgeben.') . '</span>';
                 }
                 echo '</td></tr>';
             }
@@ -272,7 +273,7 @@ function cm_render_pool($pool, $cfg, $snapshots, $generated) {
         echo '</tbody></table>';
     }
 
-    echo '<h3>Verlauf der Belegung</h3>';
+    echo '<h3>Verlauf der Belegung' . cm_help('Ein Punkt pro Tag, höchstens 30 Tage. Die gestrichelten Linien sind die Warnschwelle und die kritische Schwelle.') . '</h3>';
     echo cm_chart($snapshots, $name, (int) $cfg['WARN_PERCENT'], (int) $cfg['CRIT_PERCENT']);
 }
 
@@ -351,8 +352,15 @@ function cm_delta($bytes) {
     return '<span class="' . $class . '">' . $prefix . cm_h(cm_bytes($bytes)) . '</span>';
 }
 
-function cm_fact($label, $value) {
-    echo '<div><span class="cm-muted">' . cm_h($label) . '</span><strong>' . cm_h($value) . '</strong></div>';
+function cm_fact($label, $value, $help = '') {
+    echo '<div><span class="cm-muted">' . cm_h($label) . cm_help($help) . '</span><strong>' . cm_h($value) . '</strong></div>';
+}
+
+function cm_help($text) {
+    if ($text === '') {
+        return '';
+    }
+    return '<span class="cm-help"><button type="button" class="cm-help-btn" aria-label="Hilfe">?</button><span class="cm-help-pop" role="tooltip">' . cm_h($text) . '</span></span>';
 }
 
 function cm_chunk($label, $used, $size, $cfg) {
@@ -444,14 +452,14 @@ function cm_render_settings($cfg, $names) {
         echo '<input type="hidden" name="csrf_token" value="' . cm_h($token) . '">';
     }
     echo '<input type="hidden" name="cm_settings" value="1">';
-    echo '<label>Warnung ab %<input name="WARN_PERCENT" value="' . cm_h($cfg['WARN_PERCENT']) . '" inputmode="numeric"></label>';
-    echo '<label>Kritisch ab %<input name="CRIT_PERCENT" value="' . cm_h($cfg['CRIT_PERCENT']) . '" inputmode="numeric"></label>';
-    echo '<label>Metadaten-Warnung ab %<input name="META_PERCENT" value="' . cm_h($cfg['META_PERCENT']) . '" inputmode="numeric"></label>';
-    echo '<label>Prognose-Horizont in Tagen<input name="FORECAST_DAYS" value="' . cm_h($cfg['FORECAST_DAYS']) . '" inputmode="numeric"></label>';
-    echo '<label>Ordnerscan alle Stunden<input name="SCAN_HOURS" value="' . cm_h($cfg['SCAN_HOURS']) . '" inputmode="numeric"></label>';
-    echo '<label>Ordertiefe<select name="DEPTH"><option value="1"' . ($cfg['DEPTH'] === '1' ? ' selected' : '') . '>Nur oberste Ebene</option><option value="2"' . ($cfg['DEPTH'] !== '1' ? ' selected' : '') . '>Mit Unterordnern</option></select></label>';
-    echo '<label>Benachrichtigung<select name="NOTIFY"><option value="yes"' . ($cfg['NOTIFY'] !== 'no' ? ' selected' : '') . '>An</option><option value="no"' . ($cfg['NOTIFY'] === 'no' ? ' selected' : '') . '>Aus</option></select></label>';
-    echo '<label>Standard-Pool<input name="POOL" value="' . cm_h($cfg['POOL']) . '" placeholder="' . cm_h($names ? implode(', ', $names) : 'cache') . '"></label>';
+    echo '<label><span>Warnung ab %' . cm_help('Ab diesem Füllstand erscheint eine Warnung.') . '</span><input name="WARN_PERCENT" value="' . cm_h($cfg['WARN_PERCENT']) . '" inputmode="numeric"></label>';
+    echo '<label><span>Kritisch ab %' . cm_help('Ab diesem Füllstand gilt der Pool als kritisch. Der Wert muss über der Warnung liegen.') . '</span><input name="CRIT_PERCENT" value="' . cm_h($cfg['CRIT_PERCENT']) . '" inputmode="numeric"></label>';
+    echo '<label><span>Metadaten-Warnung ab %' . cm_help('Warnt, wenn der Btrfs-Metadaten-Bereich so voll ist. Unabhängig vom freien Platz oben.') . '</span><input name="META_PERCENT" value="' . cm_h($cfg['META_PERCENT']) . '" inputmode="numeric"></label>';
+    echo '<label><span>Prognose-Horizont in Tagen' . cm_help('Warnung, wenn die Hochrechnung den Pool innerhalb dieser Tage füllt.') . '</span><input name="FORECAST_DAYS" value="' . cm_h($cfg['FORECAST_DAYS']) . '" inputmode="numeric"></label>';
+    echo '<label><span>Ordnerscan alle Stunden' . cm_help('Wie oft Ordner, große Dateien, Docker und VMs neu gelesen werden. Die Belegung selbst wird stündlich gemessen.') . '</span><input name="SCAN_HOURS" value="' . cm_h($cfg['SCAN_HOURS']) . '" inputmode="numeric"></label>';
+    echo '<label><span>Ordertiefe' . cm_help('Nur die oberste Ebene, oder zusätzlich die nächste Ordnerebene.') . '</span><select name="DEPTH"><option value="1"' . ($cfg['DEPTH'] === '1' ? ' selected' : '') . '>Nur oberste Ebene</option><option value="2"' . ($cfg['DEPTH'] !== '1' ? ' selected' : '') . '>Mit Unterordnern</option></select></label>';
+    echo '<label><span>Benachrichtigung' . cm_help('Unraid-Hinweis bei Warnung oder kritisch. Dieselbe Meldung kommt frühestens nach 12 Stunden erneut.') . '</span><select name="NOTIFY"><option value="yes"' . ($cfg['NOTIFY'] !== 'no' ? ' selected' : '') . '>An</option><option value="no"' . ($cfg['NOTIFY'] === 'no' ? ' selected' : '') . '>Aus</option></select></label>';
+    echo '<label><span>Standard-Pool' . cm_help('Dieser Pool ist beim Öffnen ausgewählt. Leer bevorzugt den Pool cache.') . '</span><input name="POOL" value="' . cm_h($cfg['POOL']) . '" placeholder="' . cm_h($names ? implode(', ', $names) : 'cache') . '"></label>';
     echo '<button class="cm-btn cm-on" type="submit">Speichern</button>';
     echo '</form>';
     echo '<p class="cm-muted">Die stündliche Messung aktualisiert Belegung, Temperatur und Prognose. Der Ordnerscan ist seltener, weil er den Cache liest. Meldungen gehen über die Unraid-Benachrichtigung.</p>';
@@ -494,5 +502,9 @@ function cm_css() {
 .cm-form input,.cm-form select{padding:6px 8px}
 .cm-switch{display:flex;gap:8px;flex-wrap:wrap}
 .cm-foot{margin-top:18px}
+.cm-help{position:relative;display:inline-flex;vertical-align:middle;margin-left:4px;font-weight:400}
+.cm-help-btn{width:16px;height:16px;border-radius:50%;border:1px solid rgba(127,127,127,.6);background:transparent;color:inherit;font-size:11px;line-height:14px;padding:0;cursor:help}
+.cm-help-pop{display:none;position:fixed;z-index:80;width:240px;padding:8px 10px;border-radius:8px;border:1px solid rgba(127,127,127,.45);background:#1c2430;color:#f4f6f8;font-size:12px;font-weight:400;line-height:1.4;text-align:left;white-space:normal;box-shadow:0 8px 24px rgba(0,0,0,.28)}
+.cm-help:hover .cm-help-pop,.cm-help:focus-within .cm-help-pop,.cm-help.cm-open .cm-help-pop{display:block}
 ';
 }

@@ -1,6 +1,6 @@
 Menu="Utilities"
 Title="Cache Monitor"
-Icon="hdd-o"
+Icon="cache-monitor.png"
 Markdown="false"
 ---
 <?php

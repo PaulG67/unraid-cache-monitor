@@ -22,7 +22,7 @@ Es ist kein Docker-Container und kein User Script nötig. Schwellen und der Verl
 
 **Plugins → Check for Updates**, dann das angebotene Update installieren. Einstellungen und Verlauf bleiben.
 
-Wenn Unraid kein Update anzeigt, die Seite mit Strg+F5 neu laden. Die Version steht unten auf der Cache-Monitor-Seite und im Plugin als `2026.11.13.2`.
+Wenn Unraid kein Update anzeigt, die Seite mit Strg+F5 neu laden. Die Version steht unten auf der Cache-Monitor-Seite und im Plugin als `2026.11.13.3`.
 
 ## Was die Messung macht
 
